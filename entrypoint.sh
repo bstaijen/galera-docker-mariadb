@@ -91,6 +91,20 @@ fi
 				ALTER USER 'root'@'%' PASSWORD EXPIRE;
 			EOSQL
 		fi
+
+    # Copied on April 24th, 2017, from https://github.com/docker-library/mariadb/blob/21eed39fdd34c84ecd83cc077ad3253cfa875c5c/10.1/docker-entrypoint.sh
+    # from line 169-178
+    echo
+		for f in /docker-entrypoint-initdb.d/*; do
+			case "$f" in
+				*.sh)     echo "$0: running $f"; . "$f" ;;
+				*.sql)    echo "$0: running $f"; "${mysql[@]}" < "$f"; echo ;;
+				*.sql.gz) echo "$0: running $f"; gunzip -c "$f" | "${mysql[@]}"; echo ;;
+				*)        echo "$0: ignoring $f" ;;
+			esac
+			echo
+		done
+
 		if ! kill -s TERM "$pid" || ! wait "$pid"; then
 			echo >&2 'MySQL init process failed.'
 			exit 1
